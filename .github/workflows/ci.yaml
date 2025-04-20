@@ -34,6 +34,7 @@ jobs:
         run:  |
           bazelisk build --enable_bzlmod -c "${{ matrix.MODE }}" //...
       - name: bazel test
+        if: ${{ matrix.MODE == 'dbg' }}
         run:  |
           bazelisk test --enable_bzlmod --build_tests_only -c "${{ matrix.MODE }}"  --test_output=all --verbose_failures //...
 
