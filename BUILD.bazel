@@ -1,12 +1,12 @@
+load("@build_bazel_rules_apple//apple:ios.bzl", "ios_application", "ios_unit_test")
+load("@build_bazel_rules_apple//apple:macos.bzl", "macos_unit_test")
+load("@build_bazel_rules_swift//swift:swift.bzl", "swift_interop_hint", "swift_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
-
-load("@build_bazel_rules_apple//apple:ios.bzl", "ios_application", "ios_unit_test")
-load("@build_bazel_rules_apple//apple:macos.bzl", "macos_unit_test")
-load("@build_bazel_rules_swift//swift:swift.bzl", "swift_library")
 
 OBJC_COPTS = [
     "-Werror",
@@ -50,14 +50,19 @@ objc_library(
     hdrs = glob([
         "Sources/FBLPromises/include/*.h",
     ]) + [
-        "FBLPromises.h",
         "FBLPromise+Testing.h",
+        "FBLPromises.h",
     ],
     copts = OBJC_COPTS,
     includes = [
         "Sources/FBLPromises/include",
     ],
+)
+
+swift_interop_hint(
+    name = "FBLPromises_swift_interop",
     module_map = "Sources/FBLPromises/include/module.modulemap",
+    module_name = "FBLPromises",
 )
 
 objc_library(
@@ -73,17 +78,22 @@ objc_library(
     includes = [
         "Sources/FBLPromisesTestHelpers/include",
     ],
-    module_map = "Sources/FBLPromisesTestHelpers/include/module.modulemap",
     deps = [
         ":FBLPromises",
     ],
 )
 
+swift_interop_hint(
+    name = "FBLPromisesTestHelpers_swift_interop",
+    module_map = "Sources/FBLPromisesTestHelpers/include/module.modulemap",
+    module_name = "FBLPromisesTestHelpers",
+)
+
 ios_unit_test(
     name = "Tests",
     minimum_os_version = MINIMUM_OS_VERSION,
-    target_compatible_with = ["@platforms//os:ios"],
     runner = "@rules_apple//apple/testing/default_runner:ios_xctestrun_ordered_runner",
+    target_compatible_with = ["@platforms//os:ios"],
     deps = [
         ":FBLPromisesInteroperabilityTests",
         ":FBLPromisesPerformanceTests",
@@ -107,7 +117,6 @@ macos_unit_test(
         ":PromisesTests",
     ],
 )
-
 
 swift_library(
     name = "PromisesTests",
@@ -163,10 +172,10 @@ objc_library(
         "Tests/FBLPromisesInteroperabilityTests/*.m",
     ]),
     copts = OBJC_COPTS,
+    enable_modules = True,
     includes = [
         "Promises",
     ],
-    enable_modules = True,
     module_name = "FBLPromisesInteroperabilityTests",
     deps = [
         ":FBLPromisesTestHelpers",
